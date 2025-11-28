@@ -2,36 +2,27 @@ name: Sync to Hugging Face Hub
 
 on:
   push:
-    branches: [main] # Or whatever your default branch is
+    branches: [main] # Or your branch name
   workflow_dispatch:
 
 jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4 # Use the latest checkout action
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: true
+          lfs: true 
       
-      # *** CHANGE THE ACTION VERSION HERE ***
       - name: Push to Hugging Face Space
-        # Try a more modern version, e.g., v0.1.0 or the latest SHA if available.
-        # I'll suggest a known good version or the recommended main branch structure.
+        # We will keep @main or try a specific version (e.g., v0.0.5) if @main still fails
         uses: nateraw/huggingface-sync-action@main 
         with:
-          # This should be the same as your GitHub repo (e.g., enamul1/chat-with-enamul)
-          github_repo_id: 'enamul1/chat-with-enamul'
-          
-          # This must be the ID of your EXISTING Space (e.g., enamul1/chat-with-mohammad-enamul)
+          github_repo_id: enamul1/chat-with-enamul
           huggingface_repo_id: enamul1/chat-with-mohammad-enamul 
-          
-          # This references the secret you created in Step 1
           hf_token: ${{ secrets.HF_TOKEN }} 
-          
-          # Ensure these are correct
           repo_type: 'space'
           space_sdk: 'gradio' 
-          
-          # Add this to ensure it updates the existing repo, not tries to create one
-          sync_mode: 'update'
+          # *** CRITICAL FIX: Explicitly set the private parameter as a boolean ***
+          private: false 
+          # Note: The 'subdirectory' input is also available if you only want to sync a specific folder.
