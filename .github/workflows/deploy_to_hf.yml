@@ -1,8 +1,8 @@
-name: Sync to Hugging Face Hub
+name: Deploy to Hugging Face Space
 
 on:
   push:
-    branches: [main] # Or your branch name
+    branches: [main] # Or your primary branch name
   workflow_dispatch:
 
 jobs:
@@ -12,17 +12,23 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: true 
+          lfs: true # Include this if you use large files
       
+      # 1. Configure Git for the push
+      - name: Configure Git
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Actions"
+          
+      # 2. Push to the Hugging Face Space using the URL and Token
       - name: Push to Hugging Face Space
-        # We will keep @main or try a specific version (e.g., v0.0.5) if @main still fails
-        uses: nateraw/huggingface-sync-action@main 
-        with:
-          github_repo_id: enamul1/chat-with-enamul
-          huggingface_repo_id: enamul1/chat-with-mohammad-enamul 
-          hf_token: ${{ secrets.HF_TOKEN }} 
-          repo_type: 'space'
-          space_sdk: 'gradio' 
-          # *** CRITICAL FIX: Explicitly set the private parameter as a boolean ***
-          private: false 
-          # Note: The 'subdirectory' input is also available if you only want to sync a specific folder.
+        env:
+          # Your Hugging Face username (used for the URL)
+          HF_USERNAME: enamul1 
+          # Your Hugging Face Space ID (used for the URL)
+          SPACE_NAME: chat-with-mohammad-enamul 
+          # The secret token you created
+          HF_TOKEN: ${{ secrets.HF_TOKEN }} 
+        run: |
+          # The git push command uses the token for authentication
+          git push -f https://${HF_USERNAME}:${HF_TOKEN}@huggingface.co/spaces/${HF_USERNAME}/${SPACE_NAME} main
