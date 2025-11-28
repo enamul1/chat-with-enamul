@@ -2,33 +2,35 @@ name: Deploy to Hugging Face Space
 
 on:
   push:
-    branches: [main] # Or your primary branch name
+    branches: [main]
   workflow_dispatch:
 
 jobs:
   sync-to-hub:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: true # Include this if you use large files
-      
-      # 1. Configure Git for the push
-      - name: Configure Git
+          lfs: true
+
+      - name: Setup Git
         run: |
           git config user.email "action@github.com"
           git config user.name "GitHub Actions"
-          
-      # 2. Push to the Hugging Face Space using the URL and Token
+
       - name: Push to Hugging Face Space
         env:
-          # Your Hugging Face username (used for the URL)
-          HF_USERNAME: enamul1 
-          # Your Hugging Face Space ID (used for the URL)
-          SPACE_NAME: chat-with-mohammad-enamul 
-          # The secret token you created
-          HF_TOKEN: ${{ secrets.HF_TOKEN }} 
+          HF_USERNAME: enamul1
+          SPACE_NAME: chat-with-mohammad-enamul
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          # The git push command uses the token for authentication
-          git push -f https://${HF_USERNAME}:${HF_TOKEN}@huggingface.co/spaces/${HF_USERNAME}/${SPACE_NAME} main
+          HF_URL="https://$HF_USERNAME:$HF_TOKEN@huggingface.co/spaces/$HF_USERNAME/$SPACE_NAME"
+
+          # Add remote if not exists
+          git remote remove hf || true
+          git remote add hf "$HF_URL"
+
+          # Push force to Space's main branch
+          git push hf main --force
