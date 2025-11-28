@@ -1,0 +1,25 @@
+name: Sync to Hugging Face Hub
+
+on:
+  push:
+    branches: [main] # Trigger on every push to your main branch
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions tab
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true # Keep this if your Gradio app uses large files
+
+      # This action handles the synchronization with the Hugging Face Hub
+      - name: Push to Hugging Face Space
+        uses: nateraw/huggingface-sync-action@v0.0.5 
+        with:
+          github_repo_id: ${{ github.repository }}
+          huggingface_repo_id: enamul1/chat-with-mohammad-enamul 
+          hf_token: ${{ secrets.HF_TOKEN }}
+          repo_type: 'space'
+          space_sdk: 'gradio'
