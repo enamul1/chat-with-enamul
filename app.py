@@ -133,7 +133,7 @@ If the user is engaging in discussion, try to steer them towards getting in touc
         
         # Check if user has reached the limit
         if question_count >= self.max_questions_per_user:
-            return f"I appreciate your interest! I've answered {self.max_questions_per_user} questions in this session. To continue our conversation, please reach out to me directly via email. I'd love to hear from you!"
+            return f"I appreciate your interest! I've answered {self.max_questions_per_user} questions in this session. To continue our conversation, please reach out to me directly via email 'enamul.promy@gmail.com' I'd love to hear from you!"
         
         messages = [{"role": "system", "content": self.system_prompt()}] + history + [{"role": "user", "content": message}]
         done = False
