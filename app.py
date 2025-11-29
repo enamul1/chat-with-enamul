@@ -158,12 +158,33 @@ If the user is engaging in discussion, try to steer them towards getting in touc
         
         return response.choices[0].message.content
     
+    def respond(self, message, history):
+        """Wrapper function for Gradio interface"""
+        if not message:
+            return history
+        # Convert Gradio history format to messages format
+        messages_history = []
+        for msg in history:
+            messages_history.append({"role": msg["role"], "content": msg["content"]})
+        
+        response = self.chat(message, messages_history)
+        history.append({"role": "user", "content": message})
+        history.append({"role": "assistant", "content": response})
+        return history, ""
+
 
 if __name__ == "__main__":
     me = Me()
-    gr.ChatInterface(
-        me.chat, 
-        type="messages",
-        placeholder="⚠️ Experimental: For educational and informational purposes only"
-    ).launch()
+    
+    with gr.Blocks() as demo:
+        chatbot = gr.Chatbot(type="messages")
+        msg = gr.Textbox(
+            placeholder="⚠️ Experimental: For educational and informational purposes only",
+            show_label=False,
+            container=False
+        )
+        
+        msg.submit(me.respond, [msg, chatbot], [chatbot, msg])
+    
+    demo.launch()
     
