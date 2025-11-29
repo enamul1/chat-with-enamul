@@ -176,15 +176,26 @@ If the user is engaging in discussion, try to steer them towards getting in touc
 if __name__ == "__main__":
     me = Me()
     
-    with gr.Blocks() as demo:
+    with gr.Blocks(css="""
+        .enter-btn {
+            background-color: lightslategray !important;
+        }
+        .enter-btn:hover {
+            background-color: #5f7a8a !important;
+        }
+    """) as demo:
         chatbot = gr.Chatbot(type="messages")
-        msg = gr.Textbox(
-            placeholder="⚠️ Experimental: For educational and informational purposes only",
-            show_label=False,
-            container=False
-        )
+        with gr.Row():
+            msg = gr.Textbox(
+                placeholder="⚠️ Experimental: For educational and informational purposes only",
+                show_label=False,
+                container=False,
+                scale=9
+            )
+            submit_btn = gr.Button("Enter", variant="primary", scale=1, elem_classes="enter-btn")
         
         msg.submit(me.respond, [msg, chatbot], [chatbot, msg])
+        submit_btn.click(me.respond, [msg, chatbot], [chatbot, msg])
     
     demo.launch()
     
