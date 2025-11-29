@@ -80,6 +80,7 @@ class Me:
         google_api_key = os.getenv("GEMINI_API_KEY")
         self.gemini = OpenAI(base_url=GEMINI_BASE_URL, api_key=google_api_key)
         self.name = "Mohammad Enamul Haque"
+        self.max_questions_per_user = 10
         reader = PdfReader("me/Profile.pdf")
         self.linkedin = ""
         for page in reader.pages:
@@ -118,19 +119,43 @@ If the user is engaging in discussion, try to steer them towards getting in touc
         system_prompt += f"With this context, please chat with the user, always staying in character as {self.name}."
         return system_prompt
     
+    def count_user_questions(self, history):
+        """Count the number of user questions in the conversation history"""
+        count = 0
+        for msg in history:
+            if isinstance(msg, dict) and msg.get("role") == "user":
+                count += 1
+        return count
+    
     def chat(self, message, history):
+        # Count user questions (excluding the current one)
+        question_count = self.count_user_questions(history)
+        
+        # Check if user has reached the limit
+        if question_count >= self.max_questions_per_user:
+            return f"I appreciate your interest! I've answered {self.max_questions_per_user} questions in this session. To continue our conversation, please reach out to me directly via email. I'd love to hear from you!"
+        
         messages = [{"role": "system", "content": self.system_prompt()}] + history + [{"role": "user", "content": message}]
         done = False
         while not done:
-            response = self.gemini.chat.completions.create(model="gemini-2.5-flash", messages=messages, tools=tools)
-            if response.choices[0].finish_reason=="tool_calls":
-                message = response.choices[0].message
-                tool_calls = message.tool_calls
-                results = self.handle_tool_call(tool_calls)
-                messages.append(message)
-                messages.extend(results)
-            else:
-                done = True
+            try:
+                response = self.gemini.chat.completions.create(model="gemini-2.5-flash", messages=messages, tools=tools)
+                if response.choices[0].finish_reason=="tool_calls":
+                    message = response.choices[0].message
+                    tool_calls = message.tool_calls
+                    results = self.handle_tool_call(tool_calls)
+                    messages.append(message)
+                    messages.extend(results)
+                else:
+                    done = True
+            except Exception as e:
+                # Handle API limit errors or other API issues
+                error_msg = str(e).lower()
+                if "quota" in error_msg or "limit" in error_msg or "rate" in error_msg:
+                    return "I apologize, but I've reached my API usage limit. Please try again later or contact me directly via email."
+                else:
+                    return f"I apologize, but I encountered an error: {str(e)}. Please try again later."
+        
         return response.choices[0].message.content
     
 
